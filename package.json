@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "prisma": "^6.16.3"
   },
   "scripts": {
     "dev": "bun run --watch index.ts",
@@ -15,6 +16,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@prisma/client": "^6.16.3",
+    "psql": "^0.0.1",
     "telegraf": "^4.16.3"
   }
 }
