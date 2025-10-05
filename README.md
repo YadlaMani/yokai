@@ -1,16 +1,3 @@
-# yokai
+BOT_TOKEN=8420625261:AAFh_zaEE2owSBA-OfXHeS1S1zCWgx7PZTE
 
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.2.23. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
-# yokai
+bot url= https://t.me/yokaiwallet_bot
