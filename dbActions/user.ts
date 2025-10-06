@@ -29,3 +29,48 @@ export const storeNewUser = async (telegramId: number, username?: string) => {
     console.error(err);
   }
 };
+export const addUserAction = async (telegramId: number, action: string) => {
+  try {
+    const user = await prisma.user.update({
+      where: { telegramId: telegramId.toString() },
+      data: { action },
+    });
+    return user;
+  } catch (err) {
+    console.error(err);
+  }
+};
+export const getUserAction = async (telegramId: number) => {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { telegramId: telegramId.toString() },
+    });
+    return user?.action;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+export const addUserWallet = async (
+  telegramId: number,
+  address: string,
+  nickname: string
+) => {
+  try {
+    const wallet = await prisma.wallet.create({
+      data: {
+        address,
+        nickname,
+        telegramId: telegramId.toString(),
+      },
+    });
+    return {
+      success: true,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+    };
+  }
+};

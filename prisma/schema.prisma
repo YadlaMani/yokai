@@ -17,5 +17,14 @@ model User{
   id Int @id @default(autoincrement())
   telegramId String @unique
   username String @unique
+  action String?
+  wallets Wallet[]
   
+}
+model Wallet{
+  id Int @id @default(autoincrement())
+  address String
+  nickname String
+  telegramId String
+  user User @relation(fields: [telegramId], references: [telegramId])
 }
