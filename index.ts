@@ -1,13 +1,33 @@
-import { Telegraf, Markup } from "telegraf";
+import { Telegraf, Markup, Context } from "telegraf";
 import { message } from "telegraf/filters";
 import {
   storeNewUser,
   addUserAction,
   getUserAction,
   addUserWallet,
+  getUserWallets,
 } from "./dbActions/user";
 
 const bot = new Telegraf(process.env.BOT_TOKEN!);
+
+async function handleAddWallet(ctx: Context) {
+  await ctx.reply(
+    "Enter you wallet address and nickname you want to give in the format address-nickname make no mistakes example: x6FkrapfDNfqBvhnDMU7V53K2kPYB1odvw29XMmzKu7LZ-metamask"
+  );
+  await addUserAction(ctx.from!.id, "creating_wallet");
+}
+
+async function handleListWallets(ctx: Context) {
+  await ctx.reply("Here are the wallets you have");
+  const wallets = await getUserWallets(ctx.from!.id);
+  if (wallets && wallets.length > 0) {
+    wallets.forEach((wallet) => {
+      ctx.reply(`Nickname: ${wallet.nickname}\nAddress: ${wallet.address}`);
+    });
+  } else {
+    ctx.reply("You have no wallets added yet.");
+  }
+}
 
 bot.start(async (ctx) => {
   console.log(ctx.from);
@@ -27,15 +47,17 @@ bot.start(async (ctx) => {
     ctx.reply(`Welcome back ${username} we missed you!`);
   }
 });
+
 bot.command("menu", async (ctx) => {
   await ctx.reply(
     "Here is the menu,we support take it or leave it",
     Markup.inlineKeyboard([
       [Markup.button.callback("Add Wallet", "add_wallet")],
-      [Markup.button.callback("My Wallets", "my_wallets")],
+      [Markup.button.callback("My Wallets", "list_wallets")],
     ])
   );
 });
+
 bot.command("clear", async (ctx) => {
   let i = 0;
   while (true) {
@@ -46,15 +68,20 @@ bot.command("clear", async (ctx) => {
     }
   }
 });
+
+bot.command("add_wallet", handleAddWallet);
+bot.command("list_wallets", handleListWallets);
+
 bot.action("add_wallet", async (ctx) => {
-  ctx.reply(
-    "Enter you wallet address and nickname you want to give in the fomrat address-nickname make no mistakes example: x6FkrapfDNfqBvhnDMU7V53K2kPYB1odvw29XMmzKu7LZ-metamask"
-  );
-  await addUserAction(ctx.from.id, "creating_wallet");
+  await ctx.answerCbQuery();
+  await handleAddWallet(ctx);
 });
-bot.action("my_wallets", async (ctx) => {
-  ctx.reply("Here are the wallets you have");
+
+bot.action("list_wallets", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleListWallets(ctx);
 });
+
 bot.on(message("text"), async (ctx) => {
   const userId = ctx.from.id;
   const step = await getUserAction(userId);
@@ -80,4 +107,16 @@ bot.on(message("text"), async (ctx) => {
     }
   }
 });
+
+async function setTelegrafCommands() {
+  await bot.telegram.setMyCommands([
+    { command: "start", description: "Start the bot" },
+    { command: "menu", description: "Show the menu" },
+    { command: "clear", description: "Clear chat" },
+    { command: "add_wallet", description: "Add a new wallet" },
+    { command: "list_wallets", description: "List all wallets" },
+  ]);
+}
+setTelegrafCommands();
+
 bot.launch();

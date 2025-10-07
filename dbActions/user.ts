@@ -74,3 +74,14 @@ export const addUserWallet = async (
     };
   }
 };
+export const getUserWallets = async (telegramId: number) => {
+  try {
+    const wallets = await prisma.wallet.findMany({
+      where: { telegramId: telegramId.toString() },
+    });
+    return wallets;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+};

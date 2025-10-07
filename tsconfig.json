@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "module": "esnext",
+    "module": "esnext",
     // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ESNext",
