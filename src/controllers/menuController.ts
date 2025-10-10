@@ -30,5 +30,6 @@ export async function setupBotCommands(bot: Telegraf) {
     { command: "clear", description: "Clear chat" },
     { command: "add_wallet", description: "Add a new wallet" },
     { command: "list_wallets", description: "List all wallets" },
+    { command: "balances", description: "Get balances of your wallets" },
   ]);
 }

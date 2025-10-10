@@ -1,4 +1,22 @@
 import { prisma } from "../lib/db";
+import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+
+const connection = new Connection(
+  "https://api.mainnet-beta.solana.com",
+  "confirmed"
+);
+export async function getBalance(address: String) {
+  try {
+    const pubkey = new PublicKey(address);
+    const lamports = await connection.getBalance(pubkey);
+    const sol = lamports / LAMPORTS_PER_SOL;
+    console.log(sol, lamports);
+    return sol;
+  } catch (error) {
+    console.error("Invalid address :", error);
+    return 0;
+  }
+}
 export const addUserWallet = async (
   telegramId: number,
   address: string,
@@ -28,6 +46,21 @@ export const getUserWallets = async (telegramId: number) => {
       where: { telegramId: telegramId.toString() },
     });
     return wallets;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+};
+export const getUserBalances = async (telegramId: number) => {
+  try {
+    const wallets = await getUserWallets(telegramId);
+    const balancePromise = wallets.map(async (wallet) => ({
+      nickname: wallet.nickname,
+      address: wallet.address,
+      balance: (await getBalance(wallet.address)) || "0",
+    }));
+    const balances = await Promise.all(balancePromise);
+    return balances;
   } catch (err) {
     console.error(err);
     return [];
