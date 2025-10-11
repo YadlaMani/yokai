@@ -1,11 +1,18 @@
 import { prisma } from "../lib/db";
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
+interface Balance {
+  nickname: string;
+  address: string;
+  balance: string;
+}
+
 const connection = new Connection(
   "https://api.mainnet-beta.solana.com",
   "confirmed"
 );
-export async function getBalance(address: String) {
+
+export async function getBalance(address: string): Promise<number> {
   try {
     const pubkey = new PublicKey(address);
     const lamports = await connection.getBalance(pubkey);
@@ -13,33 +20,31 @@ export async function getBalance(address: String) {
     console.log(sol, lamports);
     return sol;
   } catch (error) {
-    console.error("Invalid address :", error);
+    console.error("Invalid address:", error);
     return 0;
   }
 }
+
 export const addUserWallet = async (
   telegramId: number,
   address: string,
   nickname: string
 ) => {
   try {
-    const wallet = await prisma.wallet.create({
+    await prisma.wallet.create({
       data: {
         address,
         nickname,
         telegramId: telegramId.toString(),
       },
     });
-    return {
-      success: true,
-    };
+    return { success: true };
   } catch (err) {
     console.error(err);
-    return {
-      success: false,
-    };
+    return { success: false };
   }
 };
+
 export const getUserWallets = async (telegramId: number) => {
   try {
     const wallets = await prisma.wallet.findMany({
@@ -51,15 +56,21 @@ export const getUserWallets = async (telegramId: number) => {
     return [];
   }
 };
-export const getUserBalances = async (telegramId: number) => {
+
+export const getUserBalances = async (
+  telegramId: number
+): Promise<Balance[]> => {
   try {
     const wallets = await getUserWallets(telegramId);
-    const balancePromise = wallets.map(async (wallet) => ({
-      nickname: wallet.nickname,
-      address: wallet.address,
-      balance: (await getBalance(wallet.address)) || "0",
-    }));
-    const balances = await Promise.all(balancePromise);
+    const balancePromises = wallets.map(async (wallet) => {
+      const balance = await getBalance(wallet.address);
+      return {
+        nickname: wallet.nickname,
+        address: wallet.address,
+        balance: balance.toString() || "0",
+      };
+    });
+    const balances = await Promise.all(balancePromises);
     return balances;
   } catch (err) {
     console.error(err);
