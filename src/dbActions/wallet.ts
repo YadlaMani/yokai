@@ -5,6 +5,7 @@ interface Balance {
   nickname: string;
   address: string;
   balance: string;
+  difference: string;
 }
 
 const connection = new Connection(
@@ -17,7 +18,6 @@ export async function getBalance(address: string): Promise<number> {
     const pubkey = new PublicKey(address);
     const lamports = await connection.getBalance(pubkey);
     const sol = lamports / LAMPORTS_PER_SOL;
-    console.log(sol, lamports);
     return sol;
   } catch (error) {
     console.error("Invalid address:", error);
@@ -62,12 +62,19 @@ export const getUserBalances = async (
 ): Promise<Balance[]> => {
   try {
     const wallets = await getUserWallets(telegramId);
+    
     const balancePromises = wallets.map(async (wallet) => {
       const balance = await getBalance(wallet.address);
+      const diff=balance-parseFloat(wallet.prevBalance);
+      const add=await prisma.wallet.update({
+        where: { id: wallet.id },
+        data: { prevBalance: balance.toString() },
+      })
       return {
         nickname: wallet.nickname,
         address: wallet.address,
         balance: balance.toString() || "0",
+        difference: diff.toFixed(5).toString()
       };
     });
     const balances = await Promise.all(balancePromises);

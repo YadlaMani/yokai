@@ -56,15 +56,27 @@ export async function handleBalances(ctx: Context) {
   await ctx.reply("Fetching balances for your wallets...");
   const balances = await getUserBalances(ctx.from!.id);
   let totalBalance = 0; 
+  let totalDiff=0;
+ let message = `
+<b>💼 Wallet Balances</b>\n
+<pre>
+Nickname    Address     Balance(SOL)  Last Visit
+─────────────────────────────────────────────────────`;
+
   for (const b of balances) {
-    const message = `
-<b>💼 Wallet Details</b>\n
-<b>🪪 Nickname:</b> <code>${b.nickname}</code>\n
-<b>🔗 Address:</b> <code>${b.address}</code>\n
-<b>💰 Balance:</b> <b>${b.balance}</b> SOL
-    `;
-    await ctx.reply(message, { parse_mode: "HTML" });
+    const nicknamePadded = b.nickname.padEnd(10);
+    const addressTruncated=`${b.address.slice(0, 3)}...${b.address.slice(-3)}`;
+    const balanceTruncated=parseFloat(b.balance).toFixed(5);
+    message += `\n${nicknamePadded} ${addressTruncated}     ${balanceTruncated}       ${parseFloat(b.difference)>0?`+${parseFloat(b.difference).toFixed(5)}`:`${parseFloat(b.difference).toFixed(5)}`}`;
     totalBalance += parseFloat(b.balance);
+    totalDiff += parseFloat(b.difference);
   }
-  await ctx.reply(`Total Balance Across All Wallets: ${totalBalance} SOL`);
+
+  message += `\n─────────────────────────────────────────────────────
+Total Balance: ${parseFloat(totalBalance.toString()).toFixed(5)} SOL</pre>`;
+  if(totalDiff>0){
+    message+=`\nTotal Change Since Last Visit: +${parseFloat(totalDiff.toString()).toFixed(5)} SOL`;
+  }
+
+  await ctx.reply(message, { parse_mode: "HTML" });
 }
