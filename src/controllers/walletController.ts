@@ -77,6 +77,9 @@ Total Balance: ${parseFloat(totalBalance.toString()).toFixed(5)} SOL</pre>`;
   if(totalDiff>0){
     message+=`\nTotal Change Since Last Visit: +${parseFloat(totalDiff.toString()).toFixed(5)} SOL`;
   }
+  else if(totalDiff<0){
+    message+=`\nTotal Change Since Last Visit: ${parseFloat(totalDiff.toString()).toFixed(5)} SOL`;
+  }
 
   await ctx.reply(message, { parse_mode: "HTML" });
 }

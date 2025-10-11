@@ -9,7 +9,7 @@ interface Balance {
 }
 
 const connection = new Connection(
-  "https://api.mainnet-beta.solana.com",
+  "https://api.devnet.solana.com",
   "confirmed"
 );
 
