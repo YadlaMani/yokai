@@ -1,6 +1,8 @@
 import { prisma } from "../lib/db";
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { programs } from "@metaplex/js";
+import type { Context } from "telegraf";
 interface Balance {
   nickname: string;
   address: string;
@@ -9,7 +11,7 @@ interface Balance {
 }
 
 const connection = new Connection(
-  "https://api.devnet.solana.com",
+  process.env.RPC_URL||"https://api.devnet.solana.com",
   "confirmed"
 );
 
@@ -84,3 +86,64 @@ export const getUserBalances = async (
     return [];
   }
 };
+
+export const getTokensInfo=async(ctx:Context,walletAddress:string):Promise<void>=>{
+  try{
+  const owner = new PublicKey(walletAddress);
+    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+      owner,
+      {
+        programId: TOKEN_PROGRAM_ID,
+      }
+    );
+
+    if (tokenAccounts.value.length === 0) {
+      await ctx.reply("No tokens found for this wallet.");
+      return;
+    }
+
+    const tokens = await Promise.all(
+      tokenAccounts.value.map(async ({ account }) => {
+        const parsedInfo = account.data.parsed.info;
+        const mint = parsedInfo.mint;
+        const balance = parsedInfo.tokenAmount.uiAmountString;
+
+        let name = "N/A";
+        let symbol = "N/A";
+        try {
+          const tokenMetadata = await programs.metadata.Metadata.findByMint(
+            connection,
+            new PublicKey(mint)
+          );
+          name = tokenMetadata.data.data.name.trim();
+          symbol = tokenMetadata.data.data.symbol.trim();
+        } catch {
+          // no metadata, keep defaults
+        }
+
+        return { name, symbol, balance };
+      })
+    );
+
+    let message = `📊 <b>Token Balances</b>\n\n<pre>`;
+    message += `────────────────────────────────────\n`;
+    message += `Name         Symbol    Balance\n`;
+    message += `────────────────────────────────────\n`;
+
+    for (const t of tokens) {
+      if (t.balance == 0) continue;
+      const name = t.name.padEnd(13);
+      const symbol = t.symbol.padEnd(8);
+      const balance = parseFloat(t.balance).toFixed(5);
+      message += `${name} ${symbol} ${balance}\n`;
+    }
+
+    message += `────────────────────────────────────</pre>`;
+
+    await ctx.reply(message, { parse_mode: "HTML" });
+  } catch (err) {
+    await ctx.reply(
+      "❌ Failed to fetch token balances. Make sure the wallet address is valid."
+    );
+  }
+}

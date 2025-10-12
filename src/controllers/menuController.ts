@@ -12,7 +12,7 @@ export async function handleMenu(ctx: Context) {
 
 export async function handleClear(ctx: Context) {
   if (!ctx.message) return;
-  
+
   let i = 0;
   while (true) {
     try {
@@ -31,5 +31,6 @@ export async function setupBotCommands(bot: Telegraf) {
     { command: "add_wallet", description: "Add a new wallet" },
     { command: "list_wallets", description: "List all wallets" },
     { command: "balances", description: "Get balances of your wallets" },
+    { command: "tokens", description: "Get token balances of your wallets" },
   ]);
 }

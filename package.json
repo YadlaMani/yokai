@@ -16,7 +16,10 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@metaplex/js": "^4.12.0",
     "@prisma/client": "^6.16.3",
+    "@solana-program/token": "^0.6.0",
+    "@solana/kit": "^3.0.3",
     "@solana/web3.js": "^1.98.4",
     "bun": "^1.2.23",
     "psql": "^0.0.1",

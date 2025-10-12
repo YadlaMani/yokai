@@ -2,6 +2,7 @@ import { Context } from "telegraf";
 import { addUserAction } from "../dbActions/user";
 import {
   addUserWallet,
+  getTokensInfo,
   getUserBalances,
   getUserWallets,
 } from "../dbActions/wallet";
@@ -11,6 +12,11 @@ export async function handleAddWallet(ctx: Context) {
     "Enter you wallet address and nickname you want to give in the format address-nickname make no mistakes example: x6FkrapfDNfqBvhnDMU7V53K2kPYB1odvw29XMmzKu7LZ-metamask"
   );
   await addUserAction(ctx.from!.id, "creating_wallet");
+}
+
+export async function handleGetTokens(ctx: Context) {
+  await ctx.reply("Give me the wallet address to fetch token balances");
+  await addUserAction(ctx.from!.id, "tokens");
 }
 
 export async function handleListWallets(ctx: Context) {
@@ -55,9 +61,9 @@ export async function processWalletCreation(ctx: Context, text: string) {
 export async function handleBalances(ctx: Context) {
   await ctx.reply("Fetching balances for your wallets...");
   const balances = await getUserBalances(ctx.from!.id);
-  let totalBalance = 0; 
-  let totalDiff=0;
- let message = `
+  let totalBalance = 0;
+  let totalDiff = 0;
+  let message = `
 <b>💼 Wallet Balances</b>\n
 <pre>
 Nickname    Address     Balance(SOL)  Last Visit
@@ -65,21 +71,34 @@ Nickname    Address     Balance(SOL)  Last Visit
 
   for (const b of balances) {
     const nicknamePadded = b.nickname.padEnd(10);
-    const addressTruncated=`${b.address.slice(0, 3)}...${b.address.slice(-3)}`;
-    const balanceTruncated=parseFloat(b.balance).toFixed(5);
-    message += `\n${nicknamePadded} ${addressTruncated}     ${balanceTruncated}       ${parseFloat(b.difference)>0?`+${parseFloat(b.difference).toFixed(5)}`:`${parseFloat(b.difference).toFixed(5)}`}`;
+    const addressTruncated = `${b.address.slice(0, 3)}...${b.address.slice(
+      -3
+    )}`;
+    const balanceTruncated = parseFloat(b.balance).toFixed(5);
+    message += `\n${nicknamePadded} ${addressTruncated}     ${balanceTruncated}       ${
+      parseFloat(b.difference) > 0
+        ? `+${parseFloat(b.difference).toFixed(5)}`
+        : `${parseFloat(b.difference).toFixed(5)}`
+    }`;
     totalBalance += parseFloat(b.balance);
     totalDiff += parseFloat(b.difference);
   }
 
   message += `\n─────────────────────────────────────────────────────
 Total Balance: ${parseFloat(totalBalance.toString()).toFixed(5)} SOL</pre>`;
-  if(totalDiff>0){
-    message+=`\nTotal Change Since Last Visit: +${parseFloat(totalDiff.toString()).toFixed(5)} SOL`;
-  }
-  else if(totalDiff<0){
-    message+=`\nTotal Change Since Last Visit: ${parseFloat(totalDiff.toString()).toFixed(5)} SOL`;
+  if (totalDiff > 0) {
+    message += `\nTotal Change Since Last Visit: +${parseFloat(
+      totalDiff.toString()
+    ).toFixed(5)} SOL`;
+  } else if (totalDiff < 0) {
+    message += `\nTotal Change Since Last Visit: ${parseFloat(
+      totalDiff.toString()
+    ).toFixed(5)} SOL`;
   }
 
   await ctx.reply(message, { parse_mode: "HTML" });
+}
+export async function getTokens(ctx: Context, walletAddress: string) {
+  await ctx.reply("Fetching token balances...");
+  await getTokensInfo(ctx, walletAddress);
 }
