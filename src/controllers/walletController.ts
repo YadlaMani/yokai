@@ -2,6 +2,7 @@ import { Context } from "telegraf";
 import { addUserAction } from "../dbActions/user";
 import {
   addUserWallet,
+  getTokenBalances,
   getTokensInfo,
   getUserBalances,
   getUserWallets,
@@ -102,3 +103,15 @@ export async function getTokens(ctx: Context, walletAddress: string) {
   await ctx.reply("Fetching token balances...");
   await getTokensInfo(ctx, walletAddress);
 }
+
+
+export async function handleTokenBalance(ctx:Context){
+  await ctx.reply("Give me the token address to fetch token balances");
+  await addUserAction(ctx.from!.id, "token_balance");
+}
+
+export async function tokenBalance(ctx:Context,tokenAddress:string){
+  await ctx.reply("Fetching token balances from your wallets");
+  await getTokenBalances(ctx,tokenAddress,ctx.from!.id);
+}
+

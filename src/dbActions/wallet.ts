@@ -1,8 +1,9 @@
 import { prisma } from "../lib/db";
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import { programs } from "@metaplex/js";
 import type { Context } from "telegraf";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
 interface Balance {
   nickname: string;
   address: string;
@@ -147,3 +148,37 @@ export const getTokensInfo=async(ctx:Context,walletAddress:string):Promise<void>
     );
   }
 }
+ 
+export const getTokenBalances = async (ctx: Context, tokenMintAddress: string, telegramId: number) => {
+  const wallets = await getUserWallets(telegramId);
+  const results: any[] = [];
+
+  try {
+    for (const wallet of wallets) {
+      const ata = await getAssociatedTokenAddress(
+        new PublicKey(tokenMintAddress),      // mint (e.g. BONK)
+        new PublicKey(wallet.address),        // wallet address
+        false,
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
+
+      let balance;
+      try {
+        balance = await connection.getTokenAccountBalance(ata);
+      } catch (err) {
+        balance = { value: { uiAmount: 0, uiAmountString: "0" } };
+      }
+
+      results.push({
+        wallet: `${wallet.address.slice(0,2)}...${wallet.address.slice(-3)}`,
+        balance: balance.value.uiAmountString,
+      });
+    }
+    await ctx.reply(`Token balances:\n${results.map(r => `${r.wallet}: ${r.balance}`).join('\n')}`);
+    return results;
+  } catch (err) {
+    console.error("Error fetching token balances:", err);
+    await ctx.reply("Failed to fetch token balances.");
+  }
+};

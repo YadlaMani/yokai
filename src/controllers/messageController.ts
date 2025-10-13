@@ -1,6 +1,10 @@
 import { Context } from "telegraf";
 import { getUserAction } from "../dbActions/user";
-import { getTokens, processWalletCreation } from "./walletController";
+import {
+  getTokens,
+  processWalletCreation,
+  tokenBalance,
+} from "./walletController";
 
 export async function handleTextMessage(ctx: Context) {
   if (!ctx.message || !("text" in ctx.message)) return;
@@ -16,5 +20,10 @@ export async function handleTextMessage(ctx: Context) {
   if (step === "tokens") {
     const text = ctx.message.text.trim();
     await getTokens(ctx, text);
+  }
+
+  if (step == "token_balance") {
+    const text = ctx.message.text.trim();
+    await tokenBalance(ctx, text);
   }
 }
