@@ -1,6 +1,9 @@
 import { prisma } from "../lib/db";
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { programs } from "@metaplex/js";
 import type { Context } from "telegraf";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
@@ -10,11 +13,7 @@ interface Balance {
   balance: string;
   difference: string;
 }
-
-const connection = new Connection(
-  process.env.RPC_URL||"https://api.devnet.solana.com",
-  "confirmed"
-);
+import { connection } from "../utils";
 
 export async function getBalance(address: string): Promise<number> {
   try {
@@ -65,19 +64,19 @@ export const getUserBalances = async (
 ): Promise<Balance[]> => {
   try {
     const wallets = await getUserWallets(telegramId);
-    
+
     const balancePromises = wallets.map(async (wallet) => {
       const balance = await getBalance(wallet.address);
-      const diff=balance-parseFloat(wallet.prevBalance);
-      const add=await prisma.wallet.update({
+      const diff = balance - parseFloat(wallet.prevBalance);
+      const add = await prisma.wallet.update({
         where: { id: wallet.id },
         data: { prevBalance: balance.toString() },
-      })
+      });
       return {
         nickname: wallet.nickname,
         address: wallet.address,
         balance: balance.toString() || "0",
-        difference: diff.toFixed(5).toString()
+        difference: diff.toFixed(5).toString(),
       };
     });
     const balances = await Promise.all(balancePromises);
@@ -88,9 +87,12 @@ export const getUserBalances = async (
   }
 };
 
-export const getTokensInfo=async(ctx:Context,walletAddress:string):Promise<void>=>{
-  try{
-  const owner = new PublicKey(walletAddress);
+export const getTokensInfo = async (
+  ctx: Context,
+  walletAddress: string
+): Promise<void> => {
+  try {
+    const owner = new PublicKey(walletAddress);
     const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
       owner,
       {
@@ -147,17 +149,21 @@ export const getTokensInfo=async(ctx:Context,walletAddress:string):Promise<void>
       "❌ Failed to fetch token balances. Make sure the wallet address is valid."
     );
   }
-}
- 
-export const getTokenBalances = async (ctx: Context, tokenMintAddress: string, telegramId: number) => {
+};
+
+export const getTokenBalances = async (
+  ctx: Context,
+  tokenMintAddress: string,
+  telegramId: number
+) => {
   const wallets = await getUserWallets(telegramId);
   const results: any[] = [];
 
   try {
     for (const wallet of wallets) {
       const ata = await getAssociatedTokenAddress(
-        new PublicKey(tokenMintAddress),      // mint (e.g. BONK)
-        new PublicKey(wallet.address),        // wallet address
+        new PublicKey(tokenMintAddress),
+        new PublicKey(wallet.address),
         false,
         TOKEN_PROGRAM_ID,
         ASSOCIATED_TOKEN_PROGRAM_ID
@@ -171,11 +177,15 @@ export const getTokenBalances = async (ctx: Context, tokenMintAddress: string, t
       }
 
       results.push({
-        wallet: `${wallet.address.slice(0,2)}...${wallet.address.slice(-3)}`,
+        wallet: `${wallet.address.slice(0, 2)}...${wallet.address.slice(-3)}`,
         balance: balance.value.uiAmountString,
       });
     }
-    await ctx.reply(`Token balances:\n${results.map(r => `${r.wallet}: ${r.balance}`).join('\n')}`);
+    await ctx.reply(
+      `Token balances:\n${results
+        .map((r) => `${r.wallet}: ${r.balance}`)
+        .join("\n")}`
+    );
     return results;
   } catch (err) {
     console.error("Error fetching token balances:", err);
