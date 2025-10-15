@@ -7,6 +7,7 @@ import {
   getUserBalances,
   getUserWallets,
 } from "../dbActions/wallet";
+import { fetchNftsForWallet } from "../utils";
 
 export async function handleAddWallet(ctx: Context) {
   try {
@@ -36,15 +37,19 @@ export async function handleGetTokens(ctx: Context) {
 
 export async function handleListWallets(ctx: Context) {
   try {
-    await ctx.reply("Here are your wallets:");
     const wallets = await getUserWallets(ctx.from!.id);
 
     if (wallets && wallets.length > 0) {
-      wallets.forEach((wallet) => {
-        ctx.reply(`Nickname: ${wallet.nickname}\nAddress: ${wallet.address}`);
+      let message = "";
+      wallets.forEach((wallet, index) => {
+        message += `${index + 1}. <b>${wallet.nickname}</b> - <code>${
+          wallet.address
+        }</code>\n`;
       });
+
+      await ctx.reply(message, { parse_mode: "HTML" });
     } else {
-      ctx.reply("You have no wallets added yet.");
+      await ctx.reply("You have no wallets added yet.");
     }
   } catch (err) {
     console.error("Error in handleListWallets:", err);
@@ -163,5 +168,47 @@ export async function tokenBalance(ctx: Context, tokenAddress: string) {
   } catch (err) {
     console.error("Error in tokenBalance:", err);
     await ctx.reply("Could not fetch token balance. Developer’s fault again.");
+  }
+}
+
+export async function handleGetNfts(ctx: Context) {
+  try {
+    const wallets = await getUserWallets(ctx.from!.id);
+
+    if (wallets.length === 0) {
+      await ctx.reply("You have no wallets added. Please add a wallet first.");
+      return;
+    }
+
+    await ctx.reply("Fetching NFTs for your wallets...");
+
+    let message = "";
+
+    for (const wallet of wallets) {
+      const nfts = await fetchNftsForWallet(wallet.address);
+
+      if (nfts.length === 0) continue; // skip wallets with no NFTs
+
+      message += `Wallet: \`${wallet.address}\`\n`;
+
+      for (const nft of nfts) {
+        const explorerUrl = `https://explorer.solana.com/address/${nft.mint}?cluster=mainnet`;
+        message += `- Name: ${nft.name || "Unknown"}\n`;
+        message += `  Symbol: ${nft.symbol || "N/A"}\n`;
+        message += `  [View on Solana Explorer](${explorerUrl})\n`;
+      }
+
+      message += `\n-------------------------\n\n`;
+    }
+
+    if (!message) {
+      await ctx.reply("No NFTs found in your wallets.");
+      return;
+    }
+
+    await ctx.replyWithMarkdown(message);
+  } catch (err) {
+    console.error("Error in handleGetNfts:", err);
+    await ctx.reply("Could not fetch NFTs. Developer’s fault again.");
   }
 }

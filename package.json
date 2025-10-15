@@ -22,6 +22,7 @@
     "@solana/kit": "^3.0.3",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
+    "axios": "^1.12.2",
     "bun": "^1.2.23",
     "psql": "^0.0.1",
     "telegraf": "^4.16.3"

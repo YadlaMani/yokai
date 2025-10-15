@@ -49,6 +49,7 @@ export async function setupBotCommands(bot: Telegraf) {
         description: "Get token balances of your wallets",
       },
       { command: "token_balance", description: "Get Balances" },
+      { command: "nfts", description: "Get all NFTs of your wallets" },
     ]);
   } catch (err) {
     console.error("Error setting up commands:", err);

@@ -2,8 +2,19 @@ import { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
 import { prisma } from "./lib/db";
 import { handleStart } from "./controllers/userController";
-import { handleAddWallet, handleListWallets,handleBalances, handleGetTokens, handleTokenBalance } from "./controllers/walletController";
-import { handleMenu, handleClear, setupBotCommands } from "./controllers/menuController";
+import {
+  handleAddWallet,
+  handleListWallets,
+  handleBalances,
+  handleGetTokens,
+  handleTokenBalance,
+  handleGetNfts,
+} from "./controllers/walletController";
+import {
+  handleMenu,
+  handleClear,
+  setupBotCommands,
+} from "./controllers/menuController";
 import { handleTextMessage } from "./controllers/messageController";
 
 const bot = new Telegraf(process.env.BOT_TOKEN!);
@@ -14,9 +25,10 @@ bot.command("menu", handleMenu);
 bot.command("clear", handleClear);
 bot.command("add_wallet", handleAddWallet);
 bot.command("list_wallets", handleListWallets);
-bot.command("balances",handleBalances);
-bot.command("alltokens",handleGetTokens);
-bot.command("token_balance",handleTokenBalance);
+bot.command("balances", handleBalances);
+bot.command("alltokens", handleGetTokens);
+bot.command("token_balance", handleTokenBalance);
+bot.command("nfts", handleGetNfts);
 
 bot.action("add_wallet", async (ctx) => {
   await ctx.answerCbQuery();
@@ -34,14 +46,14 @@ setupBotCommands(bot);
 
 bot.launch();
 
-process.once('SIGINT', async () => {
-  console.log('Received SIGINT, shutting down gracefully...');
+process.once("SIGINT", async () => {
+  console.log("Received SIGINT, shutting down gracefully...");
   await prisma.$disconnect();
-  bot.stop('SIGINT');
+  bot.stop("SIGINT");
 });
 
-process.once('SIGTERM', async () => {
-  console.log('Received SIGTERM, shutting down gracefully...');
+process.once("SIGTERM", async () => {
+  console.log("Received SIGTERM, shutting down gracefully...");
   await prisma.$disconnect();
-  bot.stop('SIGTERM');
+  bot.stop("SIGTERM");
 });
