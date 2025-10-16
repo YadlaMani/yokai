@@ -6,12 +6,7 @@ import {
 } from "@solana/spl-token";
 import { programs } from "@metaplex/js";
 import type { Context } from "telegraf";
-interface Balance {
-  nickname: string;
-  address: string;
-  balance: string;
-  difference: string;
-}
+import type { Balance } from "../types";
 import { connection } from "../utils";
 
 

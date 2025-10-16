@@ -7,6 +7,7 @@ import {
     getTokensWithNotifications,
     resetTokenThresholds,
 } from "../dbActions/trackToken";
+import type { PriceAlertData } from "../types";
 
 const ALERT_THRESHOLDS = [5, 10, 15, 20, 25, 30, 40, 50];
 
@@ -48,15 +49,6 @@ export async function checkPriceChanges(bot : Telegraf) : Promise<void>{
     } catch(err){
         console.error("Error in checkPriceChanges:", err);
     }
-}
-
-interface PriceAlertData {
-    tokenSymbol: string;
-    tokenName: string;
-    tokenId: string;
-    price: number;
-    change24h: number;
-    threshold: number;
 }
 
 async function sendPriceAlert(bot : Telegraf, data: PriceAlertData): Promise<void>{

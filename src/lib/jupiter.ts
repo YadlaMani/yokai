@@ -1,14 +1,6 @@
 import axios from "axios";
 import { tokenString } from "../constants/tokens";
-
-interface JupiterPriceResponse{
-  [tokenId : string]: {
-    "usdPrice": number,
-    "blockId": number,
-    "decimals": number,
-    "priceChange24h": number
-  }
-}
+import type { JupiterPriceResponse } from "../types";
 
 const ALERT_THRESHOLDS = [5, 10, 15, 20, 25, 30, 40, 50];
 
