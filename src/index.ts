@@ -4,6 +4,8 @@ import { prisma } from "./lib/db";
 import { handleStart } from "./controllers/userController";
 import nodeCron from "node-cron";
 
+import { checkPriceChanges, resetNotificationThresholds } from "./controllers/cronController";
+
 import {
   handleAddWallet,
   handleListWallets,
@@ -53,7 +55,22 @@ bot.on(message("text"), handleTextMessage);
 
 setupBotCommands(bot);
 
+nodeCron.schedule("*/5 * * * *", async()=>{
+  console.log("Runnning price check cron job!");
+  await checkPriceChanges(bot);
+});
+
+nodeCron.schedule("0 * * * *", async()=>{
+  console.log("Running hourly cleanup job for resetting thresholds!");
+  await resetNotificationThresholds(); 
+});
+
 bot.launch();
+
+setTimeout(async ()=>{
+  console.log("Running initial price check on startup");
+  await checkPriceChanges(bot);
+}, 5000);
 
 process.once("SIGINT", async () => {
   console.log("Received SIGINT, shutting down gracefully...");

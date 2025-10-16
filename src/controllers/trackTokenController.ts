@@ -1,7 +1,5 @@
 import { Markup, type Context } from "telegraf";
-import { tokenString, AVAILABLE_TOKENS } from "../constants/tokens";
-import { tokens } from "../constants/tokens";
-import { addUserAction } from "../dbActions/user";
+import { AVAILABLE_TOKENS } from "../constants/tokens";
 import { prisma } from "../lib/db";
 
 const userSelections = new Map<number, Set<string>>();
