@@ -2,6 +2,8 @@ import { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
 import { prisma } from "./lib/db";
 import { handleStart } from "./controllers/userController";
+import nodeCron from "node-cron";
+
 import {
   handleAddWallet,
   handleListWallets,

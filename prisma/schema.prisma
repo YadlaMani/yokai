@@ -29,3 +29,5 @@ model Wallet{
   telegramId String
   user User @relation(fields: [telegramId], references: [telegramId])
 }
+
+
