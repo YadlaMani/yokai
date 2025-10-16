@@ -3,7 +3,7 @@ import { Context, Markup, Telegraf } from "telegraf";
 export async function handleMenu(ctx: Context) {
   try {
     await ctx.reply(
-      "Here is the menu, we support take it or leave it.",
+      "Here is the menu we support, take it or leave it.",
       Markup.inlineKeyboard([
         [Markup.button.callback("Add Wallet", "add_wallet")],
         [Markup.button.callback("My Wallets", "list_wallets")],
@@ -30,7 +30,7 @@ export async function handleClear(ctx: Context) {
     }
   } catch (err) {
     await ctx.reply(
-      "Couldn’t clear everything. Not your fault, developer’s problem."
+      "Could not clear everything. Not your fault, developers problem."
     );
   }
 }
@@ -50,6 +50,7 @@ export async function setupBotCommands(bot: Telegraf) {
       },
       { command: "token_balance", description: "Get Balances" },
       { command: "nfts", description: "Get all NFTs of your wallets" },
+      { command: "track_token_prices", description: "Track token prices" }
     ]);
   } catch (err) {
     console.error("Error setting up commands:", err);

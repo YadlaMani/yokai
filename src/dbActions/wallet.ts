@@ -6,7 +6,6 @@ import {
 } from "@solana/spl-token";
 import { programs } from "@metaplex/js";
 import type { Context } from "telegraf";
-import { getAssociatedTokenAddress } from "@solana/spl-token";
 interface Balance {
   nickname: string;
   address: string;
@@ -14,6 +13,9 @@ interface Balance {
   difference: string;
 }
 import { connection } from "../utils";
+
+
+import { getAssociatedTokenAddress } from "@solana/spl-token";
 
 export async function getBalance(address: string): Promise<number> {
   try {

@@ -30,4 +30,15 @@ model Wallet{
   user User @relation(fields: [telegramId], references: [telegramId])
 }
 
+model TrackedToken{
+  id String @id @default(cuid())
+  userId String 
+  tokenSymbol String
+  tokenName String
+  tokenId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  @@unique([userId, tokenId])
+  @@index([userId])
+}

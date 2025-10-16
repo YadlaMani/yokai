@@ -19,6 +19,8 @@ import {
 } from "./controllers/menuController";
 import { handleTextMessage } from "./controllers/messageController";
 
+import { handleTrackToken, handleTrackCancel, handleTrackSave, handleTrackToggle } from "./controllers/trackTokenController";
+
 const bot = new Telegraf(process.env.BOT_TOKEN!);
 
 bot.start(handleStart);
@@ -31,6 +33,7 @@ bot.command("balances", handleBalances);
 bot.command("alltokens", handleGetTokens);
 bot.command("token_balance", handleTokenBalance);
 bot.command("nfts", handleGetNfts);
+bot.command("track_token_prices", handleTrackToken);
 
 bot.action("add_wallet", async (ctx) => {
   await ctx.answerCbQuery();
@@ -41,6 +44,10 @@ bot.action("list_wallets", async (ctx) => {
   await ctx.answerCbQuery();
   await handleListWallets(ctx);
 });
+
+bot.action(/^track_toggle_/, handleTrackToggle);
+bot.action("track_save", handleTrackSave);
+bot.action("track_cancel", handleTrackCancel);
 
 bot.on(message("text"), handleTextMessage);
 
