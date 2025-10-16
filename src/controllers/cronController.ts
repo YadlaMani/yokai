@@ -1,20 +1,20 @@
-import { prisma } from "../lib/db";
 import { fetchTokenPrices } from "../lib/jupiter";
 import { Telegraf } from "telegraf";
+import {
+    getDistinctTrackedTokens,
+    getUsersTrackingToken,
+    updateNotificationThreshold,
+    getTokensWithNotifications,
+    resetTokenThresholds,
+} from "../dbActions/trackToken";
 
 const ALERT_THRESHOLDS = [5, 10, 15, 20, 25, 30, 40, 50];
 
 export async function checkPriceChanges(bot : Telegraf) : Promise<void>{
     try{
         console.log("Starting price check...");
-        const trackedTokens = await prisma.trackedToken.findMany({
-            distinct : ["tokenSymbol"],
-            select : {
-                tokenSymbol : true,
-                tokenName : true,
-                tokenId : true
-            },
-        });
+        const trackedTokens = await getDistinctTrackedTokens();
+        
         if(trackedTokens.length === 0){
             console.log("No tokens being tracked currently.");
             return;
@@ -61,16 +61,7 @@ interface PriceAlertData {
 
 async function sendPriceAlert(bot : Telegraf, data: PriceAlertData): Promise<void>{
     try{
-        const trackingUsers = await prisma.trackedToken.findMany({
-            where : {
-                tokenId : data.tokenId
-            },
-            select : {
-                id : true,
-                userId : true,
-                lastNotifiedPercentage : true
-            }
-        });
+        const trackingUsers = await getUsersTrackingToken(data.tokenId);
 
         for(const user of trackingUsers){
             const shouldNotify = data.threshold > user.lastNotifiedPercentage;
@@ -80,14 +71,7 @@ async function sendPriceAlert(bot : Telegraf, data: PriceAlertData): Promise<voi
                 await bot.telegram.sendMessage(user.userId, message, {
                     parse_mode: "Markdown"
                 });
-                await prisma.trackedToken.update({
-                    where : {
-                        id : user.id
-                    },
-                    data : {
-                        lastNotifiedPercentage : data.threshold
-                    },
-                });
+                await updateNotificationThreshold(user.id, data.threshold);
 
             }
             catch(err){
@@ -103,18 +87,8 @@ async function sendPriceAlert(bot : Telegraf, data: PriceAlertData): Promise<voi
 export async function resetNotificationThresholds() : Promise<void>{
     try {
         console.log("Checking for tokens to reset...");
-        const trackedTokens = await prisma.trackedToken.findMany({
-            where : {
-                lastNotifiedPercentage : {
-                    gt : 0,
-                },
-            },
-            distinct : ["tokenId"],
-            select : {
-                tokenId : true,
-                tokenSymbol : true,
-            },
-        })
+        const trackedTokens = await getTokensWithNotifications();
+        
         if(trackedTokens.length === 0){
             console.log("No tokens need resetting.");
             return;
@@ -125,14 +99,7 @@ export async function resetNotificationThresholds() : Promise<void>{
         for(const token of trackedTokens){
             const data = priceData.get(token.tokenId);
             if(!data) {
-                await prisma.trackedToken.updateMany({
-                    where : {
-                        tokenId : token.tokenId
-                    },
-                    data : {
-                        lastNotifiedPercentage : 0
-                    }
-                });
+                await resetTokenThresholds(token.tokenId);
 
                 console.log(`Reset thresholds for ${token.tokenSymbol} as it no longer has significant changes.`);
             }

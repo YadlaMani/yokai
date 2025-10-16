@@ -1,6 +1,6 @@
 import { Markup, type Context } from "telegraf";
 import { tokens } from "../constants/tokens";
-import { prisma } from "../lib/db";
+import { getTrackedTokens, saveTrackedTokens } from "../dbActions/trackToken";
 
 const userSelections = new Map<number, Set<string>>();
 
@@ -10,9 +10,7 @@ export async function handleTrackToken(ctx : Context){
         if(!userId) return;
         userSelections.set(userId, new Set());
 
-        const trackedTokens = await prisma.trackedToken.findMany({
-            where : {userId : userId.toString()}
-        });
+        const trackedTokens = await getTrackedTokens(userId.toString());
 
         const currentlyTracked = trackedTokens.map((t: { tokenSymbol: any; })=> t.tokenSymbol);
         const message = "Select up to 5 tokens to track, Currently tracking : " + (currentlyTracked.length > 0 ? currentlyTracked.join(", ") : "None");
@@ -86,9 +84,6 @@ export async function handleTrackSave(ctx : Context){
             return;
         }
         try{
-            await prisma.trackedToken.deleteMany({
-                where : {userId : userId.toString()}
-            });
             const tokenList = Array.from(selections).map((symbol)=>{
                 const token = tokens.find((t)=> t.symbol === symbol);
                 return {
@@ -99,11 +94,14 @@ export async function handleTrackSave(ctx : Context){
                 }
             })
 
-            await prisma.trackedToken.createMany({
-                data : tokenList
-            })
-            await ctx.editMessageText("Tracking saved for tokens: " + Array.from(selections).join(", "), {parse_mode: "Markdown"});
-            userSelections.delete(userId);
+            const result = await saveTrackedTokens(userId.toString(), tokenList);
+            
+            if (result.success) {
+                await ctx.editMessageText("Tracking saved for tokens: " + Array.from(selections).join(", "), {parse_mode: "Markdown"});
+                userSelections.delete(userId);
+            } else {
+                await ctx.reply("Failed to save your selections. Please try again later.");
+            }
         }
         catch(err){
             console.error("Database error in handleTrackSave:", err);
