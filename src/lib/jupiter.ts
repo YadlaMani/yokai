@@ -16,7 +16,7 @@ export async function fetchTokenPrices(tokenIds: string[]): Promise<Map<string, 
   try {
     const ids = tokenIds.join(",");
     const response = await axios.get<JupiterPriceResponse>(
-      `https://lite-api.jup.ag/price/v3?ids=${ids}`
+      `https://lite-api.jup.ag/price/v3?ids=${tokenString}`
     );
 
     const priceMap = new Map<string, { price: number; change24h: number }>();
@@ -24,7 +24,7 @@ export async function fetchTokenPrices(tokenIds: string[]): Promise<Map<string, 
     for (const [tokenId, data] of Object.entries(response.data)) {
       if (data && data.usdPrice !== undefined) {
         const absChange = Math.abs(data.priceChange24h || 0);
-        
+        console.log(`Token: ${tokenId}, Price: ${data.usdPrice}, 24h Change: ${data.priceChange24h}`);
         if (absChange >= Math.min(...ALERT_THRESHOLDS)) {
           priceMap.set(tokenId, {
             price: data.usdPrice,
@@ -33,7 +33,7 @@ export async function fetchTokenPrices(tokenIds: string[]): Promise<Map<string, 
         }
       }
     }
-
+    console.log("Fetched prices from Jupiter:", priceMap);
     return priceMap;
   } catch (error) {
     console.error("Error fetching prices from Jupiter:", error);

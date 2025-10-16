@@ -1,5 +1,5 @@
 import { Markup, type Context } from "telegraf";
-import { AVAILABLE_TOKENS } from "../constants/tokens";
+import { tokens } from "../constants/tokens";
 import { prisma } from "../lib/db";
 
 const userSelections = new Map<number, Set<string>>();
@@ -18,7 +18,7 @@ export async function handleTrackToken(ctx : Context){
         const message = "Select up to 5 tokens to track, Currently tracking : " + (currentlyTracked.length > 0 ? currentlyTracked.join(", ") : "None");
 
         const keyboard = Markup.inlineKeyboard([
-            ...AVAILABLE_TOKENS.map((token)=>[
+            ...tokens.map((token)=>[
                 Markup.button.callback(
                     `${currentlyTracked.includes(token.symbol) ? "✅" : ""} ${token.name}`,
                     `track_toggle_${token.symbol}`
@@ -58,7 +58,7 @@ export async function handleTrackToggle(ctx : Context){
         const message = "Select up to 5 tokens to track, Currently selected : " + selectedTokens;
         
         const keyboard = Markup.inlineKeyboard([
-            ...AVAILABLE_TOKENS.map((token)=>[
+            ...tokens.map((token)=>[
                 Markup.button.callback(
                     `${selections.has(token.symbol) ? "✅" : ""} ${token.name}`,
                     `track_toggle_${token.symbol}`
@@ -89,8 +89,8 @@ export async function handleTrackSave(ctx : Context){
             await prisma.trackedToken.deleteMany({
                 where : {userId : userId.toString()}
             });
-            const tokens = Array.from(selections).map((symbol)=>{
-                const token = AVAILABLE_TOKENS.find((t)=> t.symbol === symbol);
+            const tokenList = Array.from(selections).map((symbol)=>{
+                const token = tokens.find((t)=> t.symbol === symbol);
                 return {
                     userId : userId.toString(),
                     tokenSymbol : symbol,
@@ -100,7 +100,7 @@ export async function handleTrackSave(ctx : Context){
             })
 
             await prisma.trackedToken.createMany({
-                data : tokens
+                data : tokenList
             })
             await ctx.editMessageText("Tracking saved for tokens: " + Array.from(selections).join(", "), {parse_mode: "Markdown"});
             userSelections.delete(userId);
