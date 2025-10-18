@@ -2,6 +2,7 @@ import { Context } from "telegraf";
 import { addUserAction } from "../dbActions/user";
 import {
   addUserWallet,
+  deleteUserWallet,
   getTokenBalances,
   getTokensInfo,
   getUserBalances,
@@ -75,7 +76,7 @@ export async function processWalletCreation(ctx: Context, text: string) {
 
     if (!isValidSolanaAddress(trimmedAddress)) {
       await ctx.reply(
-        "⚠️ Ethereum addresses are not supported. This bot only accepts Solana wallet addresses.\n\n" +
+        "⚠️ Please enter a valid Solana wallet address.\n\n" +
         "Solana addresses:\n" +
         "-> Are 32-44 characters long\n" +
         "-> Use base58 encoding (no 0x prefix)\n" +
@@ -219,6 +220,75 @@ export async function handleGetNfts(ctx: Context) {
     await ctx.replyWithMarkdown(message);
   } catch (err) {
     console.error("Error in handleGetNfts:", err);
-    await ctx.reply("Could not fetch NFTs. Developer’s fault again.");
+    await ctx.reply("Could not fetch NFTs. Developer's fault again.");
+  }
+}
+
+export async function handleDeleteWallet(ctx: Context) {
+  try {
+    const wallets = await getUserWallets(ctx.from!.id);
+
+    if (wallets && wallets.length > 0) {
+      let message = "Which wallet do you want to delete? Send the number:\n\n";
+      wallets.forEach((wallet, index) => {
+        message += `${index + 1}. <b>${wallet.nickname}</b> - <code>${
+          wallet.address
+        }</code>\n`;
+      });
+
+      await ctx.reply(message, { parse_mode: "HTML" });
+      await addUserAction(ctx.from!.id, "deleting_wallet");
+    } else {
+      await ctx.reply("You have no wallets to delete.");
+    }
+  } catch (err) {
+    console.error("Error in handleDeleteWallet:", err);
+    await ctx.reply(
+      "Can't show wallets right now. Developer will take a look."
+    );
+  }
+}
+
+export async function processWalletDeletion(ctx: Context, text: string) {
+  try {
+    const userId = ctx.from!.id;
+    const walletNumber = parseInt(text.trim());
+
+    if (isNaN(walletNumber) || walletNumber < 1) {
+      await ctx.reply("Please enter a valid wallet number.");
+      return;
+    }
+
+    const wallets = await getUserWallets(userId);
+
+    if (walletNumber > wallets.length) {
+      await ctx.reply(
+        `Invalid wallet number. You only have ${wallets.length} wallet(s).`
+      );
+      return;
+    }
+
+    const walletToDelete = wallets[walletNumber - 1];
+    
+    if (!walletToDelete) {
+      await ctx.reply("Could not find the wallet. Please try again.");
+      return;
+    }
+
+    const result = await deleteUserWallet(userId, walletToDelete.id);
+
+    if (result.success) {
+      await ctx.reply(
+        `Wallet "${walletToDelete.nickname}" deleted successfully!`
+      );
+      await addUserAction(userId, "");
+    } else {
+      await ctx.reply(
+        "Could not delete wallet. Try again later. Postgres may be slow or developer is sleeping."
+      );
+    }
+  } catch (err) {
+    console.error("Error in processWalletDeletion:", err);
+    await ctx.reply("Something went wrong. Not your fault, developer's issue.");
   }
 }

@@ -13,6 +13,7 @@ import {
   handleGetTokens,
   handleTokenBalance,
   handleGetNfts,
+  handleDeleteWallet,
 } from "./controllers/walletController";
 import {
   handleMenu,
@@ -31,6 +32,7 @@ bot.command("menu", handleMenu);
 bot.command("clear", handleClear);
 bot.command("add_wallet", handleAddWallet);
 bot.command("list_wallets", handleListWallets);
+bot.command("delete_wallet", handleDeleteWallet);
 bot.command("balances", handleBalances);
 bot.command("alltokens", handleGetTokens);
 bot.command("token_balance", handleTokenBalance);
@@ -45,6 +47,11 @@ bot.action("add_wallet", async (ctx) => {
 bot.action("list_wallets", async (ctx) => {
   await ctx.answerCbQuery();
   await handleListWallets(ctx);
+});
+
+bot.action("delete_wallet", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleDeleteWallet(ctx);
 });
 
 bot.action("balances", async (ctx) => {

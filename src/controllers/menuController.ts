@@ -7,6 +7,7 @@ export async function handleMenu(ctx: Context) {
       Markup.inlineKeyboard([
         [Markup.button.callback("Add Wallet", "add_wallet")],
         [Markup.button.callback("My Wallets", "list_wallets")],
+        [Markup.button.callback("Delete Wallet", "delete_wallet")],
         
         [Markup.button.callback("Check Balances", "balances")],
         [Markup.button.callback("All Tokens", "alltokens")],
@@ -52,6 +53,7 @@ export async function setupBotCommands(bot: Telegraf) {
       { command: "clear", description: "Clear chat" },
       { command: "add_wallet", description: "Add a new wallet" },
       { command: "list_wallets", description: "List all wallets" },
+      { command: "delete_wallet", description: "Delete a saved wallet" },
       { command: "balances", description: "Get balances of your wallets" },
       {
         command: "alltokens",

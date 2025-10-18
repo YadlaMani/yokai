@@ -56,6 +56,24 @@ export const getUserWallets = async (telegramId: number) => {
   }
 };
 
+export const deleteUserWallet = async (
+  telegramId: number,
+  walletId: number
+) => {
+  try {
+    await prisma.wallet.delete({
+      where: {
+        id: walletId,
+        telegramId: telegramId.toString(),
+      },
+    });
+    return { success: true };
+  } catch (err) {
+    console.error(err);
+    return { success: false };
+  }
+};
+
 export const getUserBalances = async (
   telegramId: number
 ): Promise<Balance[]> => {

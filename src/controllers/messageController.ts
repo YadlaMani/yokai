@@ -3,6 +3,7 @@ import { getUserAction } from "../dbActions/user";
 import {
   getTokens,
   processWalletCreation,
+  processWalletDeletion,
   tokenBalance,
 } from "./walletController";
 
@@ -16,6 +17,11 @@ export async function handleTextMessage(ctx: Context) {
     if (step === "creating_wallet") {
       const text = ctx.message.text.trim();
       await processWalletCreation(ctx, text);
+    }
+
+    if (step === "deleting_wallet") {
+      const text = ctx.message.text.trim();
+      await processWalletDeletion(ctx, text);
     }
 
     console.log(step);
