@@ -1,11 +1,9 @@
-// Token related types
 export interface Token {
   symbol: string;
   name: string;
   tokenId: string;
 }
 
-// Wallet related types
 export interface Balance {
   nickname: string;
   address: string;
@@ -13,7 +11,6 @@ export interface Balance {
   difference: string;
 }
 
-// Price alert related types
 export interface PriceAlertData {
   tokenSymbol: string;
   tokenName: string;
@@ -23,7 +20,6 @@ export interface PriceAlertData {
   threshold: number;
 }
 
-// Jupiter API response types
 export interface JupiterPriceResponse {
   [tokenId: string]: {
     usdPrice: number;

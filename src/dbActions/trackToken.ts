@@ -92,7 +92,7 @@ export const getTokensWithNotifications = async () => {
     const trackedTokens = await prisma.trackedToken.findMany({
       where: {
         lastNotifiedPercentage: {
-          gt: 0,
+          not: 0,
         },
       },
       distinct: ["tokenId"],

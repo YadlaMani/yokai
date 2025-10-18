@@ -32,7 +32,7 @@ export async function checkPriceChanges(bot : Telegraf) : Promise<void>{
             const data = priceData.get(token.tokenId);
             if(!data) continue;
 
-            const triggerThreshold = ALERT_THRESHOLDS.slice().reverse().find((threshold)=>data.change24h >= threshold);
+            const triggerThreshold = ALERT_THRESHOLDS.slice().reverse().find((threshold)=>Math.abs(data.change24h) >= threshold);
 
             if(triggerThreshold){
                 await sendPriceAlert(bot, {
@@ -41,7 +41,7 @@ export async function checkPriceChanges(bot : Telegraf) : Promise<void>{
                     tokenId : token.tokenId,
                     price: data.price,
                     change24h: data.change24h,
-                    threshold: triggerThreshold,
+                    threshold: triggerThreshold,  
                 })
             }
         }
@@ -56,14 +56,23 @@ async function sendPriceAlert(bot : Telegraf, data: PriceAlertData): Promise<voi
         const trackingUsers = await getUsersTrackingToken(data.tokenId);
 
         for(const user of trackingUsers){
-            const shouldNotify = data.threshold > user.lastNotifiedPercentage;
+            const signedThreshold = data.change24h >= 0 ? data.threshold : -data.threshold;
+            
+            const shouldNotify = data.change24h >= 0 
+                ? signedThreshold > user.lastNotifiedPercentage
+                : signedThreshold < user.lastNotifiedPercentage;
+                
             if(!shouldNotify) continue;
-            const message = `Price alert : ${data.tokenName} has changed by ${data.change24h.toFixed(2)}% in the last 24 hours. Current price is $${data.price.toFixed(4)}.`;
+            
+            const direction = data.change24h >= 0 ? "increased" : "decreased";
+            const emoji = data.change24h >= 0 ? "📈" : "📉";
+            const message = `${emoji} *Price Alert*: ${data.tokenName} has ${direction} by *${Math.abs(data.change24h).toFixed(2)}%* in the last 24 hours.\nCurrent price: *$${data.price.toFixed(4)}*`;
+            
             try{
                 await bot.telegram.sendMessage(user.userId, message, {
                     parse_mode: "Markdown"
                 });
-                await updateNotificationThreshold(user.id, data.threshold);
+                await updateNotificationThreshold(user.id, signedThreshold);
 
             }
             catch(err){
@@ -90,12 +99,11 @@ export async function resetNotificationThresholds() : Promise<void>{
 
         for(const token of trackedTokens){
             const data = priceData.get(token.tokenId);
-            if(!data) {
+            const minThreshold = ALERT_THRESHOLDS[0];
+            if(!data || (minThreshold && Math.abs(data.change24h) < minThreshold)) {
                 await resetTokenThresholds(token.tokenId);
-
-                console.log(`Reset thresholds for ${token.tokenSymbol} as it no longer has significant changes.`);
+                console.log(`Reset thresholds for ${token.tokenSymbol} - no significant changes.`);
             }
-
         }
     }
     catch(err){
