@@ -7,12 +7,14 @@ import {
   getUserBalances,
   getUserWallets,
 } from "../dbActions/wallet";
-import { fetchNftsForWallet } from "../utils";
+import { fetchNftsForWallet, isValidSolanaAddress } from "../utils";
 
 export async function handleAddWallet(ctx: Context) {
   try {
     await ctx.reply(
-      "Enter your wallet address and nickname in this format: address-nickname. Example: x6FkrapfDNfqBvhnDMU7V53K2kPYB1odvw29XMmzKu7LZ-metamask"
+      "Enter your Solana wallet address and nickname in this format: address-nickname.\n\n" +
+      "Example: 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU-MyWallet\n\n" +
+      "⚠️ Only Solana addresses are accepted for now"
     );
     await addUserAction(ctx.from!.id, "creating_wallet");
   } catch (err) {
@@ -30,7 +32,7 @@ export async function handleGetTokens(ctx: Context) {
   } catch (err) {
     console.error("Error in handleGetTokens:", err);
     await ctx.reply(
-      "Could not process request. Developer’s problem, not yours."
+      "Could not process request. Developer's problem, not yours."
     );
   }
 }
@@ -54,7 +56,7 @@ export async function handleListWallets(ctx: Context) {
   } catch (err) {
     console.error("Error in handleListWallets:", err);
     await ctx.reply(
-      "Can’t fetch wallets right now. Developer will take a look."
+      "Can't fetch wallets right now. Developer will take a look."
     );
   }
 }
@@ -69,15 +71,23 @@ export async function processWalletCreation(ctx: Context, text: string) {
       return;
     }
 
-    if (address.length < 20) {
-      await ctx.reply("Invalid address, please check and try again.");
+    const trimmedAddress = address.trim();
+
+    if (!isValidSolanaAddress(trimmedAddress)) {
+      await ctx.reply(
+        "⚠️ Ethereum addresses are not supported. This bot only accepts Solana wallet addresses.\n\n" +
+        "Solana addresses:\n" +
+        "-> Are 32-44 characters long\n" +
+        "-> Use base58 encoding (no 0x prefix)\n" +
+        "-> Example: 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+      );
       return;
     }
 
-    const success = await addUserWallet(userId, address, nickname);
+    const success = await addUserWallet(userId, trimmedAddress, nickname.trim());
 
     if (success) {
-      await ctx.reply(`Wallet ${nickname} added successfully!`);
+      await ctx.reply(`Wallet ${nickname.trim()} added successfully!`);
       await addUserAction(userId, "");
     } else {
       await ctx.reply(

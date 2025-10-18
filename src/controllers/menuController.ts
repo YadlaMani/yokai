@@ -7,6 +7,15 @@ export async function handleMenu(ctx: Context) {
       Markup.inlineKeyboard([
         [Markup.button.callback("Add Wallet", "add_wallet")],
         [Markup.button.callback("My Wallets", "list_wallets")],
+        
+        [Markup.button.callback("Check Balances", "balances")],
+        [Markup.button.callback("All Tokens", "alltokens")],
+        [Markup.button.callback("Token Balance", "token_balance")],
+        
+        [Markup.button.callback("My NFTs", "nfts")],
+        [Markup.button.callback("Track Token Prices", "track_token_prices")],
+        
+        [Markup.button.callback("Clear Chat", "clear")],
       ])
     );
   } catch (err) {

@@ -47,6 +47,36 @@ bot.action("list_wallets", async (ctx) => {
   await handleListWallets(ctx);
 });
 
+bot.action("balances", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleBalances(ctx);
+});
+
+bot.action("alltokens", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleGetTokens(ctx);
+});
+
+bot.action("token_balance", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleTokenBalance(ctx);
+});
+
+bot.action("nfts", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleGetNfts(ctx);
+});
+
+bot.action("track_token_prices", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleTrackToken(ctx);
+});
+
+bot.action("clear", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleClear(ctx);
+});
+
 bot.action(/^track_toggle_/, handleTrackToggle);
 bot.action("track_save", handleTrackSave);
 bot.action("track_cancel", handleTrackCancel);
